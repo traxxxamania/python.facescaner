@@ -1,0 +1,140 @@
+{
+  "name": "TIER CHECK learned score",
+  "version": "tier-check-score-1.0.0",
+  "rubric_version": "2026.10",
+  "created": "2026-10-28",
+  "features": [
+    "jaw",
+    "symmetry",
+    "harmony",
+    "skin",
+    "hair",
+    "light"
+  ],
+  "architecture": [
+    6,
+    32,
+    24,
+    1
+  ],
+  "activation": "relu",
+  "training": {
+    "samples": 80000,
+    "train": 60000,
+    "validation": 10000,
+    "test": 10000,
+    "epochs": 180,
+    "batch_size": 512,
+    "learning_rate": 0.002,
+    "seed": 20261028
+  },
+  "metrics": {
+    "val_mae": 0.2128,
+    "test_mae_raw": 0.2155,
+    "test_mae_final": 0.2155,
+    "test_max_abs_error": 2.8043,
+    "test_r2_final": 0.999514,
+    "monotonicity_violations": 15,
+    "monotonicity_max_drop": 0.4987
+  },
+  "tier_distribution": {
+    "sub3": {
+      "name": "SUB 3",
+      "count": 374,
+      "share": 0.0374
+    },
+    "sub5": {
+      "name": "SUB 5",
+      "count": 719,
+      "share": 0.0719
+    },
+    "ltn": {
+      "name": "LTN",
+      "count": 2617,
+      "share": 0.2617
+    },
+    "mtn": {
+      "name": "MTN",
+      "count": 4538,
+      "share": 0.4538
+    },
+    "htn": {
+      "name": "HTN",
+      "count": 1168,
+      "share": 0.1168
+    },
+    "chad": {
+      "name": "CHAD",
+      "count": 564,
+      "share": 0.0564
+    },
+    "true_adam": {
+      "name": "TRUE ADAM",
+      "count": 20,
+      "share": 0.002
+    }
+  },
+  "anchors": {
+    "demo_portrait": {
+      "stats": [
+        70,
+        91,
+        96,
+        42,
+        30,
+        84
+      ],
+      "rubric": 72.2,
+      "model": 71.5
+    },
+    "balanced_70": {
+      "stats": [
+        70,
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "rubric": 71.9,
+      "model": 71.6
+    },
+    "weak_20": {
+      "stats": [
+        20,
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "rubric": 20.2,
+      "model": 19.6
+    },
+    "elite_95": {
+      "stats": [
+        95,
+        95,
+        95,
+        95,
+        95,
+        95
+      ],
+      "rubric": 94.8,
+      "model": 95.2
+    },
+    "one_weak_metric": {
+      "stats": [
+        95,
+        95,
+        95,
+        95,
+        95,
+        40
+      ],
+      "rubric": 81.9,
+      "model": 81.9
+    }
+  },
+  "disclaimer": "Trained on a self-defined rubric and synthetic metric vectors. Not trained on human attractiveness ratings or personal photos."
+}

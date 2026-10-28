@@ -48,7 +48,7 @@ Repository = "https://github.com/traxxxamania/python.facescaner"
 packages = ["app"]
 
 [tool.setuptools.package-data]
-app = ["models/*.onnx", "static/**/*"]
+app = ["models/*.onnx", "models/*.npz", "models/*.json", "static/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
