@@ -946,7 +946,7 @@
     ctx.fillText("Это мем, а не диагноз. Оценка не отражает реальную привлекательность.", 64, height - 76);
     ctx.fillStyle = color;
     ctx.font = '700 20px "Courier New", monospace';
-    ctx.fillText("TIERCHECK · FASTAPI + OPENCV", 64, height - 40);
+    ctx.fillText("TIERCHECK · TRAINED NUMPY MODEL", 64, height - 40);
 
     return offscreen;
   }
