@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tier-check"
+version = "1.0.0"
+description = "TIER CHECK — a meme face-tier scanner built with FastAPI, OpenCV and a lot of attitude."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "traxxxamania" }]
+keywords = ["fastapi", "opencv", "meme", "face-detection", "tier-list"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Framework :: FastAPI",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Graphics :: Capture :: Webcams",
+]
+dependencies = [
+  "fastapi>=0.162,<1.0",
+  "uvicorn[standard]>=0.54,<1.0",
+  "opencv-python-headless>=4.10,<6.0",
+  "numpy>=2.0,<3.0",
+  "pillow>=11.0,<14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9.0,<10.0",
+  "httpx>=0.28,<1.0",
+  "ruff>=0.17,<1.0",
+]
+
+[project.scripts]
+tier-check = "app.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/traxxxamania/python.facescaner"
+Repository = "https://github.com/traxxxamania/python.facescaner"
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.setuptools.package-data]
+app = ["models/*.onnx", "static/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
+ignore = [
+  # Russian text legitimately contains Cyrillic characters that look Latin.
+  "RUF001",
+  "RUF002",
+  "RUF003",
+]

@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0c">
+  <title>TIER CHECK — мем-сканер лица</title>
+  <meta name="description" content="Одна фотка. Семь тиров. Ноль жалости. Мем-сканер лица на Python + OpenCV.">
+  <meta property="og:title" content="TIER CHECK — мем-сканер лица">
+  <meta property="og:description" content="От SUB 3 до TRUE ADAM. Узнай, что скажет алгоритм. Это мем, а не диагноз.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/og.png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="paper-grain" aria-hidden="true"></div>
+  <div class="halftone" aria-hidden="true"></div>
+
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="logo" viewBox="0 0 48 48">
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 17V6h11M31 6h11v11M42 31v11H31M17 42H6V31"/>
+          <circle cx="24" cy="24" r="8"/>
+          <path d="M20 22.5h2M26 22.5h2M21 28q3 2.4 6 0"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-sub3" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M44 110 41 131M77 110l3 21"/>
+          <path d="M26 148c7-14 17-19 28-20M94 148c-7-14-17-19-28-20"/>
+          <path d="M60 23c-16 0-26 13-27 32-1 21 6 41 19 53 4 4 12 3 16-1 13-12 19-33 18-53-1-19-10-31-26-31Z"/>
+          <path d="M33 61c-6-2-7 5-4 9 2 3 4 2 5 0"/>
+          <path d="M86 62c5-1 6 5 3 9"/>
+          <path d="M36 39c2-9 7-14 13-17M52 21c3-1 6-1 9 0M64 21c6 2 10 6 13 11M43 27c4-4 8-6 12-7M72 23c4 3 7 7 9 13M35 45c-1-5-1-9 1-13"/>
+          <path d="M41 49q6-3 12 1M66 47q6-4 13 1"/>
+          <path d="M42 59q5-4 10 0M67 59q5-3 10 0"/>
+          <circle cx="47" cy="59" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="59" r="1.5" fill="currentColor" stroke="none"/>
+          <path d="M41 64q6 2 11 0M67 64q5 0 10 2" opacity=".55"/>
+          <path d="M61 61l-4 17q3 3 8 1"/>
+          <circle cx="43" cy="83" r="1.3" fill="currentColor" stroke="none" opacity=".65"/>
+          <circle cx="49" cy="90" r=".9" fill="currentColor" stroke="none" opacity=".55"/>
+          <circle cx="75" cy="82" r="1.1" fill="currentColor" stroke="none" opacity=".55"/>
+          <circle cx="69" cy="89" r=".8" fill="currentColor" stroke="none" opacity=".45"/>
+          <path d="M51 99q9-7 18 0"/>
+          <path d="M90 61c-3 6-2 10 0 11 2-1 3-5 0-11Z"/>
+          <path d="M46 118q6 5 12 4" opacity=".3"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-sub5" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M45 110 43 131M75 110l2 21"/>
+          <path d="M27 148c7-14 17-19 28-20M93 148c-7-14-17-19-28-20"/>
+          <path d="M60 22c-17 0-27 14-27 34 0 22 8 43 22 53 3 2 7 2 10 0 14-10 22-31 22-53 0-20-10-34-27-34Z"/>
+          <path d="M33 61c-5-2-7 3-5 7 1 3 3 4 5 2M87 61c5-2 7 3 5 7-1 3-3 4-5 2"/>
+          <path d="M36 40c1-12 11-20 24-20s23 8 24 20c-7-6-15-9-24-9s-17 3-24 9Z"/>
+          <path d="M44 32q8-5 16-5t16 5M42 37l-2 9M78 37l2 9" opacity=".55"/>
+          <path d="M42 51h12M66 51h12"/>
+          <path d="M43 59q5-2 10 0M67 59q5-2 10 0"/>
+          <circle cx="48" cy="60" r="1.8" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="60" r="1.8" fill="currentColor" stroke="none"/>
+          <path d="M61 61l-4 17q3 3 8 1"/>
+          <path d="M52 95h16"/>
+          <path d="M48 105l2 1M54 108l2 1M60 109l2 1M66 108l2 1M72 105l2 1" opacity=".35"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-ltn" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M45 110 43 131M75 110l2 21"/>
+          <path d="M27 148c7-14 17-19 28-20M93 148c-7-14-17-19-28-20"/>
+          <path d="M60 21c-16 0-26 14-26 34 0 22 8 42 22 52 2 2 6 2 8 0 14-10 22-30 22-52 0-20-10-34-26-34Z"/>
+          <path d="M34 61c-5-2-6 3-4 7 1 3 3 3 4 1M86 61c5-2 6 3 4 7-1 3-3 3-4 1"/>
+          <path d="M35 40c0-12 11-21 25-21s25 9 25 21c-5-7-13-11-23-11-6 6-14 9-23 9l-4 2Z"/>
+          <path d="M62 21c-2 5-3 9-2 13M36 38c7-1 13-4 18-9" opacity=".55"/>
+          <path d="M42 51q6-3 12 0M66 51q6-3 12 0"/>
+          <path d="M43 59q5-3 10 0M67 59q5-3 10 0"/>
+          <circle cx="48" cy="59" r="1.9" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="59" r="1.9" fill="currentColor" stroke="none"/>
+          <path d="M61 61l-4 17q3 3 8 1"/>
+          <path d="M51 93q9 6 18-2"/>
+          <path d="M38 79q2 10 9 18M82 79q-2 10-9 18" opacity=".25"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-mtn" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M45 110 43 131M75 110l2 21"/>
+          <path d="M27 148c7-14 17-19 28-20M93 148c-7-14-17-19-28-20"/>
+          <path d="M60 21c-16 0-26 14-26 34 0 22 8 42 22 52 2 2 6 2 8 0 14-10 22-30 22-52 0-20-10-34-26-34Z"/>
+          <path d="M34 61c-5-2-6 3-4 7 1 3 3 3 4 1M86 61c5-2 6 3 4 7-1 3-3 3-4 1"/>
+          <path d="M35 42c-1-13 10-24 25-24s26 11 25 24c-2-6-6-11-11-14-2 6-6 9-11 10-2-6-5-9-9-11-2 7-7 11-13 12-2 1-4 2-6 3Z"/>
+          <path d="M43 30q6-6 14-7M66 24q7 3 11 9M40 40l-3 8M82 38l3 9" opacity=".55"/>
+          <path d="M42 50q6-3 12 0M66 50q6-3 12 0"/>
+          <path d="M43 58q5-3 10 0M67 58q5-3 10 0"/>
+          <circle cx="48" cy="58" r="1.9" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="58" r="1.9" fill="currentColor" stroke="none"/>
+          <path d="M61 60l-4 18q3 3 8 1"/>
+          <path d="M51 92q9 7 19-2"/>
+          <path d="M38 79q2 10 9 18M82 79q-2 10-9 18" opacity=".3"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-htn" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M45 110 43 131M75 110l2 21"/>
+          <path d="M26 148c8-14 18-19 30-20M94 148c-8-14-18-19-30-20"/>
+          <path d="M60 21c-16 0-27 14-27 34 0 22 8 42 22 52 3 2 7 2 10 0 14-10 22-30 22-52 0-20-11-34-27-34Z"/>
+          <path d="M33 61c-5-2-6 3-4 7 1 3 3 3 4 1M87 61c5-2 6 3 4 7-1 3-3 3-4 1"/>
+          <path d="M33 45c-4-15 6-28 25-30 19-2 32 11 29 30-3-9-8-15-16-18 3 7 0 13-6 16-4-7-10-11-17-13 0 8-5 14-12 18l-3-3Z"/>
+          <path d="M40 20q8-6 18-5M67 16q9 3 14 11M37 40l-3 7" opacity=".55"/>
+          <path d="M41 50l13-3M66 47l13 3"/>
+          <path d="M43 59q5-3 10 0M67 59q5-3 10 0"/>
+          <circle cx="48" cy="59" r="1.9" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="59" r="1.9" fill="currentColor" stroke="none"/>
+          <path d="M61 60l-4 18q3 3 8 1"/>
+          <path d="M50 92q10 7 20-3"/>
+          <path d="M37 78q2 11 10 19M83 78q-2 11-10 19" opacity=".3"/>
+          <path d="M47 105q5 3 10 3" opacity=".3"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-chad" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M44 110 42 132M76 110l2 22"/>
+          <path d="M25 148c8-14 19-19 31-20M95 148c-8-14-19-19-31-20"/>
+          <path d="M60 20c-18 0-28 14-28 34 0 21 6 41 18 53 4 5 16 5 20 0 12-12 18-32 18-53 0-20-10-34-28-34Z"/>
+          <path d="M36 84q4 11 10 18M84 84q-4 11-10 18" opacity=".35"/>
+          <path d="M32 61c-5-2-6 3-4 7 1 3 3 3 4 1M88 61c5-2 6 3 4 7-1 3-3 3-4 1"/>
+          <path d="M32 44c-4-16 6-31 27-31 21 0 32 15 28 31-3-10-9-16-17-19 2 7-1 13-7 16-4-8-10-12-18-14 1 9-4 15-11 19l-2-2Z"/>
+          <path d="M39 17q9-6 20-5M68 12q11 3 17 11M36 39l-3 8" opacity=".55"/>
+          <path d="M41 49l14-4M65 45l14 4"/>
+          <path d="M43 59q5-3 10 0M67 59q5-3 10 0"/>
+          <circle cx="48" cy="59" r="1.8" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="59" r="1.8" fill="currentColor" stroke="none"/>
+          <path d="M60 60l-4 19 5 3 5-3"/>
+          <path d="M49 93q11 8 22-4"/>
+          <path d="M42 104q7 4 14 4M64 108q7 0 14-4" opacity=".35"/>
+          <path d="M46 118q7 4 14 4" opacity=".25"/>
+          <path d="M95 35l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="currentColor" stroke="none" opacity=".7"/>
+        </g>
+      </symbol>
+
+      <symbol id="face-true-adam" viewBox="0 0 120 150">
+        <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <g opacity=".4">
+            <path d="M60 4v9M35 9l4 8M85 9l-4 8M17 27l8 5M103 27l-8 5M9 50h9M111 50h-9"/>
+          </g>
+          <path d="M33 54c-6-18 5-39 27-39s33 21 27 39c4 19 7 39 5 60-3 14-11 22-17 22 4-16 2-32-2-45-2-10-2-21 0-31-5-6-10-8-13-8s-8 2-13 8c2 10 2 21 0 31-4 13-6 29-2 45-6 0-14-8-17-22-2-21 1-41 5-60Z"/>
+          <path d="M39 29q9-9 21-9t21 9M43 34l-3 11M77 34l3 11" opacity=".45"/>
+          <path d="M44 110 42 132M76 110l2 22"/>
+          <path d="M24 148c9-14 20-19 33-20M96 148c-9-14-20-19-33-20"/>
+          <path d="M60 20c-17 0-27 14-27 34 0 22 8 42 22 52 3 2 7 2 10 0 14-10 22-30 22-52 0-20-10-34-27-34Z"/>
+          <path d="M33 61c-5-2-6 3-4 7 1 3 3 3 4 1M87 61c5-2 6 3 4 7-1 3-3 3-4 1"/>
+          <path d="M42 50q6-3 12 0M66 50q6-3 12 0"/>
+          <path d="M43 58q5-3 10 0M67 58q5-3 10 0"/>
+          <circle cx="48" cy="58" r="1.9" fill="currentColor" stroke="none"/>
+          <circle cx="72" cy="58" r="1.9" fill="currentColor" stroke="none"/>
+          <path d="M60 59l-4 19 4 3 4-3"/>
+          <path d="M50 92q10 7 20 0"/>
+          <path d="M38 78q2 11 10 19M82 78q-2 11-10 19" opacity=".3"/>
+          <path d="M48 106q6 3 12 2" opacity=".25"/>
+          <path d="M99 59l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4ZM20 78l1.5 3 3 1.5-3 1.5L20 87l-1.5-3-3-1.5 3-1.5L20 78Z" fill="currentColor" stroke="none" opacity=".55"/>
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="TIER CHECK — на главную">
+      <span class="brand-mark"><svg><use href="#logo"/></svg></span>
+      <span class="brand-name">TIER<br>CHECK</span>
+    </a>
+    <div class="topbar-center">
+      <span class="issue">ISSUE 001</span>
+      <span class="issue-dot"></span>
+      <span>МЕМ-СКАНЕР ЛИЦА</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="soundBtn" type="button" aria-pressed="true" title="Выключить звук">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="sound-wave" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>
+        <span class="sr-only">Звук</span>
+      </button>
+      <a class="github-link" href="https://github.com/traxxxamania/python.facescaner" target="_blank" rel="noreferrer">GITHUB ↗</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="poster" aria-labelledby="hero-title">
+      <div class="poster-kicker"><span class="live-pip"></span> looksmaxxing scanner · v1.0</div>
+      <h1 class="hero-title" id="hero-title">
+        <span class="hero-line">ЧЕКАЙ</span>
+        <span class="hero-line hero-line-offset">СВОЙ</span>
+        <span class="hero-line hero-line-last">
+          <span class="circled">ТИР</span>
+          <svg class="circle-scribble" viewBox="0 0 300 120" aria-hidden="true"><path d="M28 58c32-30 214-38 250 2 26 30-28 47-118 47C65 107 9 87 24 62c9-15 61-28 149-27"/></svg>
+        </span>
+      </h1>
+      <p class="hero-lede">
+        Одна фотка. Семь тиров. Ноль жалости.
+        <em>Почти</em> нейросеть, <em>полностью</em> мем.
+      </p>
+      <div class="hero-actions">
+        <button class="cta-primary" id="heroStart" type="button">
+          <span>SCAN ME</span>
+          <span class="cta-arrow" aria-hidden="true">→</span>
+        </button>
+        <span class="privacy-note">фото не сохраняется<br>обрабатывается в памяти</span>
+      </div>
+
+      <div class="tier-index">
+        <div class="tier-index-head">
+          <span>TIER LIST</span>
+          <span>SCORE / 100</span>
+        </div>
+        <ol class="tier-list">
+          <li class="tier-row" style="--tier:#FE2C55">
+            <span class="tier-num">01</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-sub3"/></svg></span>
+            <span class="tier-name">SUB 3</span>
+            <span class="tier-tag">гены сказали «позже»</span>
+            <span class="tier-range">0—24</span>
+          </li>
+          <li class="tier-row" style="--tier:#FF7A00">
+            <span class="tier-num">02</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-sub5"/></svg></span>
+            <span class="tier-name">SUB 5</span>
+            <span class="tier-tag">почти нормис</span>
+            <span class="tier-range">25—39</span>
+          </li>
+          <li class="tier-row" style="--tier:#FFC400">
+            <span class="tier-num">03</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-ltn"/></svg></span>
+            <span class="tier-name">LTN</span>
+            <span class="tier-tag">low tier normie</span>
+            <span class="tier-range">40—54</span>
+          </li>
+          <li class="tier-row" style="--tier:#B8FF3C">
+            <span class="tier-num">04</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-mtn"/></svg></span>
+            <span class="tier-name">MTN</span>
+            <span class="tier-tag">mid tier normie</span>
+            <span class="tier-range">55—69</span>
+          </li>
+          <li class="tier-row" style="--tier:#25F4EE">
+            <span class="tier-num">05</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-htn"/></svg></span>
+            <span class="tier-name">HTN</span>
+            <span class="tier-tag">high tier normie</span>
+            <span class="tier-range">70—81</span>
+          </li>
+          <li class="tier-row" style="--tier:#7C5CFF">
+            <span class="tier-num">06</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-chad"/></svg></span>
+            <span class="tier-name">CHAD</span>
+            <span class="tier-tag">челюсть режет стекло</span>
+            <span class="tier-range">82—92</span>
+          </li>
+          <li class="tier-row" style="--tier:#FFD76A">
+            <span class="tier-num">07</span>
+            <span class="tier-face-wrap"><svg class="tier-face"><use href="#face-true-adam"/></svg></span>
+            <span class="tier-name">TRUE ADAM</span>
+            <span class="tier-tag">легенда</span>
+            <span class="tier-range">93—100</span>
+          </li>
+        </ol>
+      </div>
+
+      <div class="poster-footer">
+        <span class="scribble-note">это мем, а не диагноз <span aria-hidden="true">↘</span></span>
+        <div class="stickers" aria-hidden="true">
+          <span class="sticker sticker-red">100% НЕ НАУКА</span>
+          <span class="sticker sticker-cyan">0% ФИЛЬТРОВ</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="phone-stage" aria-label="Приложение TIER CHECK">
+      <div class="phone">
+        <div class="phone-screen" id="app">
+          <div class="statusbar" aria-hidden="true">
+            <span id="phoneClock">00:00</span>
+            <span class="status-icons">●●●&nbsp; ⚡</span>
+          </div>
+          <div class="notch" aria-hidden="true"></div>
+
+          <section class="screen screen-home is-active" id="screenHome" aria-labelledby="home-title">
+            <div class="home-face" aria-hidden="true"><svg><use href="#face-chad"/></svg></div>
+            <div class="home-topline">
+              <span><i class="red-dot"></i> 7 TIERS</span>
+              <span>1 FACE</span>
+            </div>
+            <h2 class="home-title" id="home-title">УЗНАЙ<br>СВОЙ<br><span>ТИР</span></h2>
+            <p class="home-sub">Разреши камеру. Посмотри в объектив. Не забудь про свет — он решает больше, чем фильтры.</p>
+            <div class="face-deck" aria-hidden="true">
+              <span><svg><use href="#face-sub3"/></svg></span>
+              <span><svg><use href="#face-sub5"/></svg></span>
+              <span><svg><use href="#face-ltn"/></svg></span>
+              <span><svg><use href="#face-mtn"/></svg></span>
+              <span><svg><use href="#face-htn"/></svg></span>
+              <span><svg><use href="#face-chad"/></svg></span>
+              <span><svg><use href="#face-true-adam"/></svg></span>
+            </div>
+            <div class="home-spacer"></div>
+            <div class="home-sticker" aria-hidden="true">
+              <svg viewBox="0 0 160 160">
+                <defs>
+                  <path id="stickerCircle" d="M80 80m-62 0a62 62 0 1 1 124 0a62 62 0 1 1-124 0"/>
+                </defs>
+                <g class="home-sticker-ring">
+                  <text class="home-sticker-text">
+                    <textPath href="#stickerCircle">NO FILTERS · NO MERCY · 7 TIERS · 1 FACE · </textPath>
+                  </text>
+                </g>
+                <circle class="home-sticker-dash" cx="80" cy="80" r="47"/>
+                <text class="home-sticker-seven" x="80" y="83" text-anchor="middle">7</text>
+                <text class="home-sticker-word" x="80" y="101" text-anchor="middle">TIERS</text>
+                <path class="home-sticker-arrow" d="M80 110v12m-4.5-4.5 4.5 4.5 4.5-4.5"/>
+              </svg>
+            </div>
+            <p class="home-handnote" aria-hidden="true">камера не врёт. почти.</p>
+            <div class="home-spacer"></div>
+            <button class="app-btn app-btn-primary" id="startCamera" type="button">
+              <span class="btn-icon" aria-hidden="true">◉</span> ВКЛЮЧИТЬ КАМЕРУ
+            </button>
+            <button class="app-btn app-btn-ghost" id="uploadTrigger" type="button">ЗАГРУЗИТЬ ФОТО</button>
+            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+            <p class="home-fineprint" id="bestLine">JPG / PNG / WEBP · до 8 МБ · без регистрации</p>
+          </section>
+
+          <section class="screen screen-camera" id="screenCamera" aria-label="Камера" aria-hidden="true">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="captureCanvas" hidden></canvas>
+            <div class="camera-shade" aria-hidden="true"></div>
+            <div class="camera-hud">
+              <span class="hud-pill hud-live"><i></i> LIVE</span>
+              <span class="hud-pill" id="camHint">ровно · на уровне глаз</span>
+            </div>
+            <div class="face-guide" aria-hidden="true">
+              <span class="corner tl"></span><span class="corner tr"></span>
+              <span class="corner bl"></span><span class="corner br"></span>
+              <span class="guide-oval"></span>
+              <span class="crosshair"></span>
+            </div>
+            <div class="countdown" id="countdown" aria-live="assertive"></div>
+            <div class="flash" id="flash" aria-hidden="true"></div>
+            <p class="camera-tip" id="cameraTip">нажми на кнопку — начнётся отсчёт</p>
+            <div class="camera-controls">
+              <button class="round-btn" id="closeCamera" type="button" aria-label="Закрыть камеру">×</button>
+              <button class="shutter" id="shutter" type="button" aria-label="Сделать фото"><span></span></button>
+              <button class="round-btn" id="flipCamera" type="button" aria-label="Сменить камеру">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-5L3 9M4 13a8 8 0 0 0 14 5l3-3M3 4v5h5M21 20v-5h-5"/></svg>
+              </button>
+            </div>
+          </section>
+
+          <section class="screen screen-scanning" id="screenScanning" aria-label="Сканирование" aria-hidden="true">
+            <img class="scan-image" id="scanImage" alt="Твоё фото">
+            <div class="scan-dark" aria-hidden="true"></div>
+            <div class="scan-grid" aria-hidden="true"></div>
+            <div class="scanline" aria-hidden="true"></div>
+            <div class="scan-corners" aria-hidden="true">
+              <span class="corner tl"></span><span class="corner tr"></span>
+              <span class="corner bl"></span><span class="corner br"></span>
+            </div>
+            <div class="scan-hud">
+              <div class="scan-topline"><span>FACE SCAN</span><span id="scanPercent">0%</span></div>
+              <div class="scan-status" id="scanStatus">ИНИЦИАЛИЗАЦИЯ…</div>
+              <div class="scan-progress"><span id="scanProgress"></span></div>
+              <div class="scan-log" id="scanLog"></div>
+              <p class="scan-warning">не двигайся · не моргай · не спорь с алгоритмом</p>
+            </div>
+          </section>
+
+          <section class="screen screen-result" id="screenResult" aria-labelledby="resultTier" aria-hidden="true">
+            <img class="result-photo" id="resultPhoto" alt="Фото, которое прошло скан">
+            <div class="result-shade" aria-hidden="true"></div>
+            <div class="result-scroll" id="resultScroll">
+              <div class="result-topline">
+                <span>CERTIFIED BY THE ALGORITHM</span>
+                <span id="resultDate">01.01.26</span>
+              </div>
+              <div class="stamp" id="resultStamp" aria-hidden="true">
+                <span class="stamp-star">✦</span>
+                <span>TIER CHECK</span>
+                <strong>CERTIFIED</strong>
+                <span>2026</span>
+              </div>
+              <div class="result-tier-label">ТВОЙ ТИР</div>
+              <h2 class="result-tier" id="resultTier">—</h2>
+              <div class="result-tag" id="resultTag">—</div>
+              <div class="result-score-row">
+                <div class="score-big"><span id="resultScore">0</span><small>/100</small></div>
+                <div class="score-meta">
+                  <span id="resultRarity">—</span>
+                  <span>по версии камеры</span>
+                </div>
+              </div>
+              <div class="result-stats" id="resultStats"></div>
+              <div class="result-note" id="resultNote"></div>
+              <div class="result-actions">
+                <button class="app-btn app-btn-primary" id="shareBtn" type="button">СОХРАНИТЬ КАРТОЧКУ</button>
+                <button class="app-btn app-btn-ghost" id="retakeBtn" type="button">ЕЩЁ РАЗ</button>
+              </div>
+              <p class="result-disclaimer">это мем. оценка не отражает реальную привлекательность и ничего не говорит о тебе как о человеке.</p>
+            </div>
+          </section>
+
+          <section class="screen screen-error" id="screenError" aria-labelledby="errorTitle" aria-hidden="true">
+            <div class="error-face" aria-hidden="true"><svg><use href="#face-sub3"/></svg></div>
+            <p class="error-kicker">SCAN FAILED</p>
+            <h2 id="errorTitle">ЛИЦО<br>НЕ НАЙДЕНО</h2>
+            <p class="error-text" id="errorText">Встань ровно, сними маску и посмотри в камеру. Или загрузи другое фото.</p>
+            <div class="error-actions">
+              <button class="app-btn app-btn-primary" id="errorRetry" type="button">ПОПРОБОВАТЬ СНОВА</button>
+              <button class="app-btn app-btn-ghost" id="errorUpload" type="button">ЗАГРУЗИТЬ ФОТО</button>
+            </div>
+          </section>
+        </div>
+        <div class="phone-bottom" aria-hidden="true"><span></span></div>
+      </div>
+      <div class="phone-shadow" aria-hidden="true"></div>
+      <p class="phone-caption">наведи на себя · нажми · получи тир</p>
+    </section>
+  </main>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>SUB 3</span><i>✦</i><span>SUB 5</span><i>✦</i><span>LTN</span><i>✦</i><span>MTN</span><i>✦</i><span>HTN</span><i>✦</i><span>CHAD</span><i>✦</i><span>TRUE ADAM</span><i>✦</i>
+      <span>SUB 3</span><i>✦</i><span>SUB 5</span><i>✦</i><span>LTN</span><i>✦</i><span>MTN</span><i>✦</i><span>HTN</span><i>✦</i><span>CHAD</span><i>✦</i><span>TRUE ADAM</span><i>✦</i>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div>
+      <strong>TIER CHECK</strong>
+      <span>мем-сканер лица на Python + FastAPI + OpenCV</span>
+    </div>
+    <div class="footer-right">
+      <span>фото не сохраняется на сервере</span>
+      <a href="https://github.com/traxxxamania/python.facescaner" target="_blank" rel="noreferrer">исходники ↗</a>
+    </div>
+  </footer>
+
+  <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
