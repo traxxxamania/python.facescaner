@@ -7,7 +7,7 @@ import base64
 import pytest
 from fastapi.testclient import TestClient
 
-from app import analyzer
+from app import analyzer, scoring
 from app.main import app
 from app.tiers import tier_for_score
 
@@ -25,6 +25,8 @@ def test_health(client: TestClient) -> None:
     assert payload["status"] == "ok"
     assert payload["version"]
     assert payload["model"].endswith(".onnx")
+    assert payload["scoring_model"] == scoring.MODEL_VERSION
+    assert payload["scoring_rubric"] == scoring.RUBRIC_VERSION
 
 
 def test_tiers_endpoint(client: TestClient) -> None:
@@ -96,6 +98,7 @@ def test_rate_response_contract(client: TestClient, monkeypatch: pytest.MonkeyPa
     assert payload["notes"] == ["Тестовая заметка.", "Это мем, а не диагноз."]
     assert payload["face_box"] == {"x": 0.2, "y": 0.15, "width": 0.4, "height": 0.5}
     assert payload["confidence"] == 0.97
+    assert payload["scoring_model"] == scoring.MODEL_VERSION
     assert "мем" in payload["disclaimer"].lower()
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["x-content-type-options"] == "nosniff"

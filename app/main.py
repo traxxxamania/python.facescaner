@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from . import __version__, analyzer
+from . import __version__, analyzer, scoring
 from .tiers import TIERS
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,6 +20,7 @@ MAX_BODY_BYTES = 9_000_000
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     analyzer.warmup()
+    scoring.warmup()
     yield
 
 
@@ -27,7 +28,7 @@ app = FastAPI(
     title="TIER CHECK",
     version=__version__,
     description=(
-        "Мем-сканер лица: FastAPI + OpenCV YuNet + эвристики. "
+        "Мем-сканер лица: FastAPI + OpenCV YuNet + обученная NumPy-модель оценки. "
         "Оценка не является реальной оценкой привлекательности."
     ),
     lifespan=lifespan,
@@ -73,6 +74,7 @@ class RateResponse(BaseModel):
     notes: list[str]
     face_box: FaceBoxResponse
     confidence: float
+    scoring_model: str
     disclaimer: str
 
 
@@ -114,7 +116,7 @@ async def runtime_error_handler(_: Request, exc: RuntimeError):
     return JSONResponse(
         status_code=503,
         content={
-            "detail": "Сканер не Ready. Проверь, что модель YuNet лежит в app/models/."
+            "detail": "Сканер не Ready. Проверь, что модели лежат в app/models/."
         },
     )
 
@@ -125,6 +127,8 @@ def health() -> dict[str, str]:
         "status": "ok",
         "version": __version__,
         "model": "face_detection_yunet_2026may.onnx",
+        "scoring_model": scoring.MODEL_VERSION,
+        "scoring_rubric": scoring.RUBRIC_VERSION,
     }
 
 
@@ -172,6 +176,7 @@ def rate_photo(payload: RateRequest):
             height=result.face_box[3],
         ),
         confidence=result.confidence,
+        scoring_model=scoring.MODEL_VERSION,
         disclaimer=(
             "Это мем-приложение. Оценка основана на геометрии кадра, "
             "освещении и текстуре — а не на реальной привлекательности."

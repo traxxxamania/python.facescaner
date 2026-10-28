@@ -5,10 +5,11 @@ from __future__ import annotations
 import base64
 import io
 
+import numpy as np
 import pytest
 from PIL import Image
 
-from app import analyzer
+from app import analyzer, scoring
 from app.tiers import tier_for_score
 
 
@@ -71,18 +72,39 @@ def test_bell_and_clamp() -> None:
     assert analyzer._clamp01(9) == 1.0
 
 
-def test_compose_score_is_deterministic_and_bounded() -> None:
-    args = (61.0, 74.0, 68.0, 52.0, 48.0, 88.0, 123456)
-    first = analyzer._compose_score(*args)
-    second = analyzer._compose_score(*args)
-    assert first == second
-    assert 1.0 <= first <= 99.4
+def test_analyze_bytes_uses_trained_scoring(monkeypatch: pytest.MonkeyPatch) -> None:
+    image = np.zeros((240, 240, 3), dtype=np.uint8)
+    face = np.zeros(15, dtype=np.float64)
+    pointer = np.array(
+        [[90.0, 100.0], [150.0, 100.0], [120.0, 130.0], [95.0, 170.0], [145.0, 170.0]],
+        dtype=np.float64,
+    )
 
+    monkeypatch.setattr(analyzer, "_decode_image", lambda _raw: image)
+    monkeypatch.setattr(analyzer, "_detect_largest_face", lambda _image: (face, 0.99))
+    monkeypatch.setattr(
+        analyzer,
+        "_align_face",
+        lambda _image, _face: (image, (60.0, 60.0, 120.0, 140.0), pointer, 0.0),
+    )
+    monkeypatch.setattr(analyzer, "_jaw_score", lambda *_args: 70.4)
+    monkeypatch.setattr(analyzer, "_symmetry_score", lambda *_args: 91.4)
+    monkeypatch.setattr(analyzer, "_harmony_score", lambda *_args: 96.4)
+    monkeypatch.setattr(analyzer, "_skin_score", lambda *_args: 42.4)
+    monkeypatch.setattr(analyzer, "_hair_score", lambda *_args: 30.4)
+    monkeypatch.setattr(analyzer, "_light_score", lambda *_args: (84.4, 0.6))
 
-def test_compose_score_seed_changes_score() -> None:
-    args = (61.0, 74.0, 68.0, 52.0, 48.0, 88.0)
-    scores = {analyzer._compose_score(*args, seed) for seed in range(1, 25)}
-    assert len(scores) > 1
+    result = analyzer.analyze_bytes(b"fake-image")
+    expected_stats = [70, 91, 96, 42, 30, 84]
+
+    assert [stat.value for stat in result.stats] == expected_stats
+    assert result.score == scoring.score_from_stats(expected_stats)
+    assert result.score == pytest.approx(71.5, abs=0.1)
+    assert result.tier == tier_for_score(result.score)
+    assert result.confidence == 0.99
+
+    repeated = analyzer.analyze_bytes(b"fake-image")
+    assert repeated == result
 
 
 def test_notes_are_short_and_strings() -> None:

@@ -1,4 +1,8 @@
-"""Heuristic face-tier analyzer.
+"""Deterministic face-tier analyzer.
+
+The six visible metrics come from lightweight image analysis. A small trained
+NumPy model turns those metrics into the final score. Identical metrics always
+produce an identical score: there is no random jitter or per-photo hash.
 
 The goal is a fast, deterministic, *playful* score that runs on a laptop CPU.
 It is not a beauty model, a medical tool, or a judgement of a real person.
@@ -9,7 +13,6 @@ from __future__ import annotations
 
 import base64
 import binascii
-import hashlib
 import io
 import math
 import os
@@ -23,6 +26,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from . import scoring
 from .tiers import Tier, tier_for_score
 
 MODEL_PATH = Path(__file__).resolve().parent / "models" / "face_detection_yunet_2026may.onnx"
@@ -367,29 +371,6 @@ def _light_score(crop: np.ndarray) -> tuple[float, float]:
     return score, brightness
 
 
-def _compose_score(
-    symmetry: float,
-    jaw: float,
-    harmony: float,
-    skin: float,
-    hair: float,
-    light: float,
-    seed: int,
-) -> float:
-    raw = (
-        symmetry * 0.18
-        + jaw * 0.24
-        + harmony * 0.22
-        + skin * 0.16
-        + hair * 0.10
-        + light * 0.10
-    )
-    # A stable ±1.5-point jitter keeps repeated scans interesting without
-    # turning the same photo into a different tier every time.
-    jitter = ((seed % 2001) / 2000 - 0.5) * 3.0
-    return float(max(1.0, min(99.4, 13.0 + raw * 0.85 + jitter)))
-
-
 def _notes_for(
     tier: Tier,
     stats: tuple[Stat, ...],
@@ -514,7 +495,6 @@ def analyze_bytes(raw: bytes) -> Analysis:
     height, width = image.shape[:2]
     face, confidence = _detect_largest_face(image)
 
-    seed = int.from_bytes(hashlib.blake2b(raw, digest_size=4).digest(), "big")
     x, y, fw, fh = (float(value) for value in face[:4])
 
     rotated, rotated_box, points, _ = _align_face(image, face)
@@ -545,9 +525,6 @@ def analyze_bytes(raw: bytes) -> Analysis:
     hair = _hair_score(rotated, *rotated_box)
     light, brightness = _light_score(crop)
 
-    score = _compose_score(symmetry, jaw, harmony, skin, hair, light, seed)
-    tier = tier_for_score(score)
-
     stats = (
         Stat("jaw", "ЧЕЛЮСТЬ", round(jaw)),
         Stat("symmetry", "СИММЕТРИЯ", round(symmetry)),
@@ -556,6 +533,11 @@ def analyze_bytes(raw: bytes) -> Analysis:
         Stat("hair", "ОБЪЁМ", round(hair)),
         Stat("light", "СВЕТ", round(light)),
     )
+
+    # The model scores the same rounded numbers the user sees, so identical
+    # stats always produce an identical score.
+    score = scoring.score_from_stats([stat.value for stat in stats])
+    tier = tier_for_score(score)
 
     face_area_ratio = (fw * fh) / max(1.0, width * height)
     notes = _notes_for(tier, stats, face_area_ratio, brightness)
